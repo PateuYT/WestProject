@@ -298,16 +298,17 @@ async def create_ticket(interaction: discord.Interaction):
     
     # Create the ticket embed
     embed = discord.Embed(
-        title="🎫 Support Tickets",
+        title="Qua Tickets",
         description="Need help? Click the button below to create a support ticket!\n\nOur team will assist you as soon as possible.",
-        color=discord.Color.blue()
+        color=discord.Color(0xFFA500)
     )
     embed.add_field(
-        name="📋 How it works",
+        name="How it works",
         value="• Click the 'Create Ticket' button\n• A private channel will be created\n• Explain your issue to our staff\n• We'll help you resolve it!",
         inline=False
     )
-    embed.set_footer(text="Support Team • We're here to help!")
+    embed.set_footer(text="Qua Support Team | We're here to help!")
+    embed.image(url="https://media.discordapp.net/attachments/1469773664127029481/1469776982555492558/cimage.png?ex=6988e3fb&is=6987927b&hm=c0055497a095d34bbc090fbe50bea256651b3aae5ccabae445c1c6d800aa73b1&=&format=webp&quality=lossless&width=708&height=354")
     embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
     
     # Create button view
