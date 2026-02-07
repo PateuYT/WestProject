@@ -354,8 +354,23 @@ class TicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.green, emoji="🎫", custom_id="create_ticket")
-    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="buy", style=discord.ButtonStyle.green, emoji="🛒", custom_id="buy_ticket")
+    async def buy_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.create_ticket(interaction, "🛒 Buy")
+    
+    @discord.ui.button(label="support", style=discord.ButtonStyle.blurple, emoji="🔗", custom_id="support_ticket")
+    async def support_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.create_ticket(interaction, "🔗 Support")
+    
+    @discord.ui.button(label="staff applications", style=discord.ButtonStyle.red, emoji="⭐", custom_id="staff_app_ticket")
+    async def staff_app_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.create_ticket(interaction, "⭐ Staff Application")
+    
+    @discord.ui.button(label="media applications", style=discord.ButtonStyle.gray, emoji="🎥", custom_id="media_app_ticket")
+    async def media_app_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.create_ticket(interaction, "🎥 Media Application")
+    
+    async def create_ticket(self, interaction: discord.Interaction, ticket_type: str):
         # Check if user already has an open ticket
         guild = interaction.guild
         existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
@@ -373,23 +388,34 @@ class TicketView(discord.ui.View):
             }
             
             ticket_channel = await guild.create_text_channel(
-                name=f"ticket-{interaction.user.name}",
+                name=f"{ticket_type[:1].lower()}-ticket-{interaction.user.name}",
                 overwrites=overwrites,
-                reason=f"Ticket created by {interaction.user}"
+                reason=f"{ticket_type} ticket created by {interaction.user}"
             )
             
             # Send initial message in ticket
             ticket_embed = discord.Embed(
-                title="🎫 Ticket Created",
-                description=f"Hello {interaction.user.mention}! Thank you for creating a ticket.\n\nPlease describe your issue and our staff will assist you shortly.",
+                title=f"🎫 {ticket_type} Ticket Created",
+                description=f"Hello {interaction.user.mention}! Thank you for creating a {ticket_type.lower()} ticket.\n\nPlease describe your request and our staff will assist you shortly.",
                 color=discord.Color.blue()
             )
+            
+            # Set different colors based on ticket type
+            if "buy" in ticket_type.lower():
+                ticket_embed.color = discord.Color.green()
+            elif "support" in ticket_type.lower():
+                ticket_embed.color = discord.Color.blue()
+            elif "staff" in ticket_type.lower():
+                ticket_embed.color = discord.Color.red()
+            elif "media" in ticket_type.lower():
+                ticket_embed.color = discord.Color.light_grey()
+            
             ticket_embed.set_footer(text="To close this ticket, a staff member will delete this channel.")
             
             close_view = CloseTicketView()
             await ticket_channel.send(f"{interaction.user.mention}", embed=ticket_embed, view=close_view)
             
-            await interaction.response.send_message(f"✅ Ticket created! {ticket_channel.mention}", ephemeral=True)
+            await interaction.response.send_message(f"✅ {ticket_type} ticket created! {ticket_channel.mention}", ephemeral=True)
         
         except Exception as e:
             await interaction.response.send_message(f"❌ Error creating ticket: {e}", ephemeral=True)
@@ -412,7 +438,7 @@ class CloseTicketView(discord.ui.View):
         import asyncio
         await asyncio.sleep(3)
         await interaction.channel.delete(reason=f"Ticket closed by {interaction.user}")
-
+        
 # Verify Button View
 class VerifyView(discord.ui.View):
     def __init__(self, role_id: str):
