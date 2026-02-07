@@ -2,64 +2,292 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import os
+from collections import defaultdict
 
 # Bot setup with necessary intents
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.invites = True  # Required for invite tracking
 
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Store invite data
+invite_cache = {}  # {guild_id: {code: invite_object}}
+invite_uses = defaultdict(lambda: defaultdict(int))  # {guild_id: {user_id: invite_count}}
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    
+    # Cache all invites for invite tracking
+    for guild in bot.guilds:
+        try:
+            invites = await guild.invites()
+            invite_cache[guild.id] = {invite.code: invite for invite in invites}
+            print(f"Cached {len(invites)} invites for {guild.name}")
+        except discord.Forbidden:
+            print(f"Missing permissions to fetch invites in {guild.name}")
+    
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s)")
     except Exception as e:
         print(f"Failed to sync commands: {e}")
 
+@bot.event
+async def on_member_join(member):
+    """Track which invite was used when a member joins"""
+    try:
+        # Get current invites
+        invites_after = await member.guild.invites()
+        invites_before = invite_cache.get(member.guild.id, {})
+        
+        # Find which invite was used
+        used_invite = None
+        for invite in invites_after:
+            before = invites_before.get(invite.code)
+            if before and invite.uses > before.uses:
+                used_invite = invite
+                break
+        
+        # Update cache
+        invite_cache[member.guild.id] = {invite.code: invite for invite in invites_after}
+        
+        # Send welcome message with invite info
+        if used_invite:
+            inviter = used_invite.inviter
+            invite_uses[member.guild.id][inviter.id] += 1
+            
+            # Try to find a welcome channel (customize this as needed)
+            welcome_channel = discord.utils.get(member.guild.text_channels, name="welcome") or \
+                             discord.utils.get(member.guild.text_channels, name="general") or \
+                             member.guild.system_channel
+            
+            if welcome_channel:
+                embed = discord.Embed(
+                    title="👋 Welcome!",
+                    description=f"Welcome {member.mention} to **{member.guild.name}**!",
+                    color=discord.Color.green()
+                )
+                embed.add_field(
+                    name="📨 Invited by",
+                    value=f"{inviter.mention} ({inviter.name}#{inviter.discriminator})",
+                    inline=True
+                )
+                embed.add_field(
+                    name="📊 Inviter Stats",
+                    value=f"Total invites: **{invite_uses[member.guild.id][inviter.id]}**",
+                    inline=True
+                )
+                embed.add_field(
+                    name="👥 Member Count",
+                    value=f"You are member #{member.guild.member_count}",
+                    inline=False
+                )
+                embed.set_thumbnail(url=member.display_avatar.url)
+                embed.set_footer(text=f"Account created: {member.created_at.strftime('%Y-%m-%d')}")
+                
+                await welcome_channel.send(embed=embed)
+        else:
+            # Couldn't determine which invite was used
+            welcome_channel = discord.utils.get(member.guild.text_channels, name="welcome") or \
+                             discord.utils.get(member.guild.text_channels, name="general") or \
+                             member.guild.system_channel
+            
+            if welcome_channel:
+                embed = discord.Embed(
+                    title="👋 Welcome!",
+                    description=f"Welcome {member.mention} to **{member.guild.name}**!",
+                    color=discord.Color.green()
+                )
+                embed.add_field(
+                    name="👥 Member Count",
+                    value=f"You are member #{member.guild.member_count}",
+                    inline=False
+                )
+                embed.set_thumbnail(url=member.display_avatar.url)
+                
+                await welcome_channel.send(embed=embed)
+    
+    except Exception as e:
+        print(f"Error tracking invite: {e}")
+
+@bot.event
+async def on_invite_create(invite):
+    """Update cache when a new invite is created"""
+    if invite.guild.id not in invite_cache:
+        invite_cache[invite.guild.id] = {}
+    invite_cache[invite.guild.id][invite.code] = invite
+
+@bot.event
+async def on_invite_delete(invite):
+    """Update cache when an invite is deleted"""
+    if invite.guild.id in invite_cache:
+        invite_cache[invite.guild.id].pop(invite.code, None)
+
 @bot.tree.command(name="say", description="Make the bot say something")
 @app_commands.describe(
-    message="The message you want the bot to send",
-    mention_everyone="Mention @everyone (default: False)",
-    mention_here="Mention @here (default: False)"
+    message="The message you want the bot to send (use @everyone or @here in your text where you want them)"
 )
 async def say(
     interaction: discord.Interaction,
-    message: str,
-    mention_everyone: bool = False,
-    mention_here: bool = False
+    message: str
 ):
-    # Check if user has permission to mention everyone/here
-    if (mention_everyone or mention_here) and not interaction.user.guild_permissions.mention_everyone:
+    # Check if user has permission to mention everyone/here if they're using these mentions
+    has_everyone = "@everyone" in message or "@here" in message
+    
+    if has_everyone and not interaction.user.guild_permissions.mention_everyone:
         await interaction.response.send_message("❌ You don't have permission to use @everyone or @here!", ephemeral=True)
         return
     
-    # Prepare the message with mentions if requested
-    final_message = message
-    if mention_everyone:
-        final_message = f"@everyone {final_message}"
-    if mention_here:
-        final_message = f"@here {final_message}"
-    
-    # Get attachments if any (for images)
-    attachments = []
-    if hasattr(interaction, 'message') and interaction.message:
-        attachments = [await attachment.to_file() for attachment in interaction.message.attachments]
-    
-    # Send the message
-    allowed_mentions = discord.AllowedMentions(everyone=mention_everyone or mention_here)
+    # Send the message with mentions enabled if they're present
+    allowed_mentions = discord.AllowedMentions(everyone=has_everyone, here=has_everyone)
     
     try:
         await interaction.response.send_message("✅ Message sent!", ephemeral=True)
         await interaction.channel.send(
-            content=final_message,
-            files=attachments if attachments else None,
+            content=message,
             allowed_mentions=allowed_mentions
         )
     except Exception as e:
         await interaction.response.send_message(f"❌ Error sending message: {e}", ephemeral=True)
+
+# Ban command (!bl)
+@bot.command(name="bl")
+@commands.has_permissions(ban_members=True)
+async def ban_user(ctx, user_id: int, *, reason: str = "No reason provided"):
+    """Ban a user by their ID"""
+    try:
+        user = await bot.fetch_user(user_id)
+        await ctx.guild.ban(user, reason=reason)
+        
+        embed = discord.Embed(
+            title="🔨 User Banned",
+            description=f"Banned **{user.name}#{user.discriminator}**",
+            color=discord.Color.red()
+        )
+        embed.add_field(name="User ID", value=user_id, inline=True)
+        embed.add_field(name="Reason", value=reason, inline=False)
+        embed.set_footer(text=f"Banned by {ctx.author.name}")
+        
+        await ctx.send(embed=embed)
+    except discord.NotFound:
+        await ctx.send("❌ User not found!")
+    except discord.Forbidden:
+        await ctx.send("❌ I don't have permission to ban this user!")
+    except Exception as e:
+        await ctx.send(f"❌ Error: {e}")
+
+@ban_user.error
+async def ban_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You don't have permission to ban members!")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ Usage: `!bl <user_id> [reason]`")
+
+# Unban command (!unbl)
+@bot.command(name="unbl")
+@commands.has_permissions(ban_members=True)
+async def unban_user(ctx, user_id: int):
+    """Unban a user by their ID"""
+    try:
+        user = await bot.fetch_user(user_id)
+        await ctx.guild.unban(user)
+        
+        embed = discord.Embed(
+            title="✅ User Unbanned",
+            description=f"Unbanned **{user.name}#{user.discriminator}**",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="User ID", value=user_id, inline=True)
+        embed.set_footer(text=f"Unbanned by {ctx.author.name}")
+        
+        await ctx.send(embed=embed)
+    except discord.NotFound:
+        await ctx.send("❌ User not found or not banned!")
+    except discord.Forbidden:
+        await ctx.send("❌ I don't have permission to unban users!")
+    except Exception as e:
+        await ctx.send(f"❌ Error: {e}")
+
+@unban_user.error
+async def unban_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You don't have permission to unban members!")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("❌ Usage: `!unbl <user_id>`")
+
+# Invite tracking commands
+@bot.command(name="invites")
+async def check_invites(ctx, member: discord.Member = None):
+    """Check how many people someone invited"""
+    member = member or ctx.author
+    
+    invite_count = invite_uses[ctx.guild.id][member.id]
+    
+    embed = discord.Embed(
+        title="📊 Invite Statistics",
+        color=discord.Color.blue()
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.add_field(
+        name=f"{member.name}#{member.discriminator}",
+        value=f"Total invites: **{invite_count}**",
+        inline=False
+    )
+    embed.set_footer(text=f"Requested by {ctx.author.name}")
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name="leaderboard", aliases=["lb", "top"])
+async def invite_leaderboard(ctx):
+    """Show the invite leaderboard"""
+    guild_invites = invite_uses[ctx.guild.id]
+    
+    if not guild_invites:
+        await ctx.send("❌ No invite data available yet!")
+        return
+    
+    # Sort by invite count
+    sorted_invites = sorted(guild_invites.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    embed = discord.Embed(
+        title="🏆 Top Inviters",
+        description=f"Leaderboard for **{ctx.guild.name}**",
+        color=discord.Color.gold()
+    )
+    
+    medals = ["🥇", "🥈", "🥉"]
+    for i, (user_id, count) in enumerate(sorted_invites, 1):
+        member = ctx.guild.get_member(user_id)
+        if member:
+            medal = medals[i-1] if i <= 3 else f"**{i}.**"
+            embed.add_field(
+                name=f"{medal} {member.name}#{member.discriminator}",
+                value=f"Invites: **{count}**",
+                inline=False
+            )
+    
+    embed.set_footer(text=f"Total tracked invites: {sum(guild_invites.values())}")
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name="resetinvites")
+@commands.has_permissions(administrator=True)
+async def reset_invites(ctx, member: discord.Member = None):
+    """Reset invite count for a member or all members"""
+    if member:
+        invite_uses[ctx.guild.id][member.id] = 0
+        await ctx.send(f"✅ Reset invite count for {member.mention}")
+    else:
+        invite_uses[ctx.guild.id].clear()
+        await ctx.send("✅ Reset all invite counts for this server!")
+
+@reset_invites.error
+async def reset_invites_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ Only administrators can reset invite counts!")
 
 @bot.tree.command(name="create", description="Create a ticket system embed")
 async def create_ticket(interaction: discord.Interaction):
