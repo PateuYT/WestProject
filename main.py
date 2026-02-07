@@ -367,10 +367,6 @@ class TicketView(discord.ui.View):
     async def staff_app_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.create_ticket(interaction, "⭐ Staff Application")
     
-    @discord.ui.button(label="media applications", style=discord.ButtonStyle.gray, emoji="🎥", custom_id="media_app_ticket")
-    async def media_app_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.create_ticket(interaction, "🎥 Media Application")
-    
     async def create_ticket(self, interaction: discord.Interaction, ticket_type: str):
         # Check if user already has an open ticket
         guild = interaction.guild
