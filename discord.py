@@ -7,7 +7,6 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-TOKEN = 
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
