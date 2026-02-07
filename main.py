@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import os
 from collections import defaultdict
+ORANGE = discord.Color(0xFFA500)
 
 # Bot setup with necessary intents
 intents = discord.Intents.default()
@@ -68,7 +69,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color.green()
+                    color=discord.Color.ORANGE
                 )
                 embed.add_field(
                     name="📨 Invited by",
@@ -99,7 +100,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color.green()
+                    color=discord.Color.ORANGE
                 )
                 embed.add_field(
                     name="👥 Member Count",
