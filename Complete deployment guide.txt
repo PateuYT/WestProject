@@ -1,0 +1,108 @@
+==========================================
+RAILWAY DEPLOYMENT - COMPLETE GUIDE
+==========================================
+
+STEP 1: CREATE THESE FILES IN YOUR PROJECT FOLDER
+==========================================
+
+FILE 1: discord_bot.py (download from the files above)
+
+FILE 2: requirements.txt
+---
+discord.py>=2.3.0
+python-dotenv>=1.0.0
+---
+
+FILE 3: railway.json
+---
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python3.10 discord_bot.py"
+  }
+}
+---
+
+FILE 4: nixpacks.toml
+---
+[phases.setup]
+nixPkgs = ["python310", "python310Packages.pip"]
+
+[phases.install]
+cmds = ["python3.10 -m pip install --upgrade pip", "python3.10 -m pip install -r requirements.txt"]
+
+[start]
+cmd = "python3.10 discord_bot.py"
+---
+
+FILE 5: .python-version (create a file named exactly ".python-version" with no extension)
+---
+3.10
+---
+
+==========================================
+STEP 2: DEPLOY TO RAILWAY
+==========================================
+
+1. Go to https://railway.app and sign in
+
+2. Click "New Project" → "Empty Project"
+
+3. Upload ALL 5 FILES listed above
+
+4. Go to "Variables" tab and add:
+   - Variable name: TOKEN
+   - Value: your_discord_bot_token
+
+5. Go to "Settings" → "Deploy" section
+   - Start Command: python3.10 discord_bot.py
+
+6. Save and deploy!
+
+==========================================
+ALTERNATIVE: MANUAL FILE CREATION IN RAILWAY
+==========================================
+
+If file upload doesn't work, you can connect a GitHub repo:
+
+1. Create a GitHub repository
+2. Upload all 5 files to the repo
+3. In Railway, choose "Deploy from GitHub repo"
+4. Select your repository
+5. Add TOKEN variable
+6. Deploy!
+
+==========================================
+TROUBLESHOOTING
+==========================================
+
+Problem: "Failed to install core:python@3.11.0"
+Solution: Make sure .python-version file exists with content "3.10"
+
+Problem: Files not uploading
+Solution: Try GitHub deployment method instead
+
+Problem: Bot not connecting
+Solution: 
+- Check TOKEN is set correctly in Variables
+- Check bot has proper Discord intents enabled
+- Wait 5 minutes and check deployment logs
+
+==========================================
+VERIFY IT'S WORKING
+==========================================
+
+1. Go to "Deployments" tab in Railway
+2. Click on the latest deployment
+3. Check logs - you should see:
+   "YourBot#1234 has connected to Discord!"
+   "Synced 3 command(s)"
+
+4. Go to your Discord server
+5. Bot should show as online
+6. Try the /say command!
+
+==========================================
