@@ -355,7 +355,37 @@ class TicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.green, emoji="🎫", custom_id="create_ticket")
+    @discord.ui.button(label="Buy", style=discord.ButtonStyle.success, emoji="🛒", custom_id="create_ticket")
+    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check if user already has an open ticket
+        guild = interaction.guild
+        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
+        
+        if existing_ticket:
+            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
+            return
+            
+    @discord.ui.button(label="Support", style=discord.ButtonStyle.link, emoji="🔗", custom_id="create_ticket")
+    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check if user already has an open ticket
+        guild = interaction.guild
+        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
+        
+        if existing_ticket:
+            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
+            return
+
+    @discord.ui.button(label="Staff application", style=discord.ButtonStyle.danger, emoji="⭐", custom_id="create_ticket")
+    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check if user already has an open ticket
+        guild = interaction.guild
+        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
+        
+        if existing_ticket:
+            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
+            return
+
+    @discord.ui.button(label="Media application", style=discord.ButtonStyle.primary, emoji="🎥", custom_id="create_ticket")
     async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Check if user already has an open ticket
         guild = interaction.guild
@@ -420,7 +450,7 @@ class VerifyView(discord.ui.View):
         super().__init__(timeout=None)
         self.role_id = int(role_id)
     
-    @discord.ui.button(label="Click here for verification", style=discord.ButtonStyle.orange, emoji="✅", custom_id="verify_button")
+    @discord.ui.button(label="Click here for verification", style=discord.ButtonStyle.green, emoji="✅", custom_id="verify_button")
     async def verify_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Get the role
         role = interaction.guild.get_role(self.role_id)
