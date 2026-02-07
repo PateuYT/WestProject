@@ -308,7 +308,7 @@ async def create_ticket(interaction: discord.Interaction):
         inline=False
     )
     embed.set_footer(text="Qua Support Team | We're here to help!")
-    embed.image(url="https://media.discordapp.net/attachments/1469773664127029481/1469776982555492558/cimage.png?ex=6988e3fb&is=6987927b&hm=c0055497a095d34bbc090fbe50bea256651b3aae5ccabae445c1c6d800aa73b1&=&format=webp&quality=lossless&width=708&height=354")
+    embed.set_image(url="https://media.discordapp.net/attachments/1469773664127029481/1469776982555492558/cimage.png?ex=6988e3fb&is=6987927b&hm=c0055497a095d34bbc090fbe50bea256651b3aae5ccabae445c1c6d800aa73b1&=&format=webp&quality=lossless&width=708&height=354")
     embed.set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
     
     # Create button view
