@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python discord_bot.py"
+    "startCommand": "python3.10 discord_bot.py"
   }
 }
