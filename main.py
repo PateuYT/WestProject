@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 import os
 from collections import defaultdict
-ORANGE = discord.Color(0xFFA500)
 
 # Bot setup with necessary intents
 intents = discord.Intents.default()
@@ -69,7 +68,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color(0xFFA500)
+                    color=discord.Color.green()
                 )
                 embed.add_field(
                     name="📨 Invited by",
@@ -100,7 +99,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color(0xFFA500)
+                    color=discord.Color.green()
                 )
                 embed.add_field(
                     name="👥 Member Count",
@@ -143,7 +142,7 @@ async def say(
         return
     
     # Send the message with mentions enabled if they're present
-    allowed_mentions = discord.AllowedMentions(everyone=has_everyone, here=has_everyone)
+    allowed_mentions = discord.AllowedMentions(everyone=has_everyone)
     
     try:
         await interaction.response.send_message("✅ Message sent!", ephemeral=True)
@@ -256,7 +255,7 @@ async def invite_leaderboard(ctx):
     embed = discord.Embed(
         title="🏆 Top Inviters",
         description=f"Leaderboard for **{ctx.guild.name}**",
-        color=discord.Color(0xFFA500)
+        color=discord.Color.gold()
     )
     
     medals = ["🥇", "🥈", "🥉"]
@@ -301,7 +300,7 @@ async def create_ticket(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎫 Support Tickets",
         description="Need help? Click the button below to create a support ticket!\n\nOur team will assist you as soon as possible.",
-        color=discord.Color(0xFFA500)
+        color=discord.Color.blue()
     )
     embed.add_field(
         name="📋 How it works",
@@ -329,7 +328,7 @@ async def verify(interaction: discord.Interaction, role_id: str = "1469777067762
     embed = discord.Embed(
         title="✅ Server Verification",
         description="Welcome to our server! Please verify yourself to gain access to all channels.",
-        color=discord.Color(0xFFA500)
+        color=discord.Color.green()
     )
     embed.add_field(
         name="🔐 How to verify",
@@ -354,47 +353,47 @@ async def verify(interaction: discord.Interaction, role_id: str = "1469777067762
 class TicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-
-    @discord.ui.button(
-        label="Buy",
-        style=discord.ButtonStyle.success,
-        emoji="🛒",
-        custom_id="ticket_buy",
-        row=0
-    )
-    async def buy_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("🛒 Buy ticket created!", ephemeral=True)
-
-    @discord.ui.button(
-        label="Support",
-        style=discord.ButtonStyle.primary,
-        emoji="🔗",
-        custom_id="ticket_support",
-        row=0
-    )
-    async def support_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("🔗 Support ticket created!", ephemeral=True)
-
-    @discord.ui.button(
-        label="Staff Application",
-        style=discord.ButtonStyle.danger,
-        emoji="⭐",
-        custom_id="ticket_staff",
-        row=0
-    )
-    async def staff_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("⭐ Staff application ticket created!", ephemeral=True)
-
-    @discord.ui.button(
-        label="Media Application",
-        style=discord.ButtonStyle.secondary,
-        emoji="🎥",
-        custom_id="ticket_media",
-        row=0
-    )
-    async def media_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("🎥 Media application ticket created!", ephemeral=True)
+    
+    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.green, emoji="🎫", custom_id="create_ticket")
+    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Check if user already has an open ticket
+        guild = interaction.guild
+        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
         
+        if existing_ticket:
+            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
+            return
+        
+        # Create ticket channel
+        try:
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            }
+            
+            ticket_channel = await guild.create_text_channel(
+                name=f"ticket-{interaction.user.name}",
+                overwrites=overwrites,
+                reason=f"Ticket created by {interaction.user}"
+            )
+            
+            # Send initial message in ticket
+            ticket_embed = discord.Embed(
+                title="🎫 Ticket Created",
+                description=f"Hello {interaction.user.mention}! Thank you for creating a ticket.\n\nPlease describe your issue and our staff will assist you shortly.",
+                color=discord.Color.blue()
+            )
+            ticket_embed.set_footer(text="To close this ticket, a staff member will delete this channel.")
+            
+            close_view = CloseTicketView()
+            await ticket_channel.send(f"{interaction.user.mention}", embed=ticket_embed, view=close_view)
+            
+            await interaction.response.send_message(f"✅ Ticket created! {ticket_channel.mention}", ephemeral=True)
+        
+        except Exception as e:
+            await interaction.response.send_message(f"❌ Error creating ticket: {e}", ephemeral=True)
+
 # Close Ticket Button View
 class CloseTicketView(discord.ui.View):
     def __init__(self):
