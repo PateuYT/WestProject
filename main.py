@@ -373,48 +373,28 @@ class TicketView(discord.ui.View):
         row=0
     )
     async def support_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message("🆘 Support ticket created!", ephemeral=True)
+        await interaction.response.send_message("🔗 Support ticket created!", ephemeral=True)
 
     @discord.ui.button(
         label="Staff Application",
         style=discord.ButtonStyle.danger,
         emoji="⭐",
         custom_id="ticket_staff",
-        row=1
+        row=0
     )
     async def staff_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message("⭐ Staff application ticket created!", ephemeral=True)
-        
-        # Create ticket channel
-        try:
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-            }
-            
-            ticket_channel = await guild.create_text_channel(
-                name=f"ticket-{interaction.user.name}",
-                overwrites=overwrites,
-                reason=f"Ticket created by {interaction.user}"
-            )
-            
-            # Send initial message in ticket
-            ticket_embed = discord.Embed(
-                title="🎫 Ticket Created",
-                description=f"Hello {interaction.user.mention}! Thank you for creating a ticket.\n\nPlease describe your issue and our staff will assist you shortly.",
-                color=discord.Color(0xFFA500)
-            )
-            ticket_embed.set_footer(text="To close this ticket, a staff member will delete this channel.")
-            
-            close_view = CloseTicketView()
-            await ticket_channel.send(f"{interaction.user.mention}", embed=ticket_embed, view=close_view)
-            
-            await interaction.response.send_message(f"✅ Ticket created! {ticket_channel.mention}", ephemeral=True)
-        
-        except Exception as e:
-            await interaction.response.send_message(f"❌ Error creating ticket: {e}", ephemeral=True)
 
+    @discord.ui.button(
+        label="Media Application",
+        style=discord.ButtonStyle.secondary,
+        emoji="🎥",
+        custom_id="ticket_media",
+        row=0
+    )
+    async def media_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("🎥 Media application ticket created!", ephemeral=True)
+        
 # Close Ticket Button View
 class CloseTicketView(discord.ui.View):
     def __init__(self):
