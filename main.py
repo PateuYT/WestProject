@@ -420,7 +420,7 @@ class VerifyView(discord.ui.View):
         super().__init__(timeout=None)
         self.role_id = int(role_id)
     
-    @discord.ui.button(label="Verify", style=discord.ButtonStyle.green, emoji="✅", custom_id="verify_button")
+    @discord.ui.button(label="Click here vor verification", style=discord.ButtonStyle.green, emoji="✅", custom_id="verify_button")
     async def verify_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Get the role
         role = interaction.guild.get_role(self.role_id)
