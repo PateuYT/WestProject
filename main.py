@@ -354,46 +354,36 @@ async def verify(interaction: discord.Interaction, role_id: str = "1469777067762
 class TicketView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-    
-    @discord.ui.button(label="Buy", style=discord.ButtonStyle.success, emoji="🛒", custom_id="create_ticket")
-    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has an open ticket
-        guild = interaction.guild
-        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
-        
-        if existing_ticket:
-            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
-            return
-            
-    @discord.ui.button(label="Support", style=discord.ButtonStyle.link, emoji="🔗", custom_id="create_ticket")
-    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has an open ticket
-        guild = interaction.guild
-        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
-        
-        if existing_ticket:
-            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
-            return
 
-    @discord.ui.button(label="Staff application", style=discord.ButtonStyle.danger, emoji="⭐", custom_id="create_ticket")
-    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has an open ticket
-        guild = interaction.guild
-        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
-        
-        if existing_ticket:
-            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
-            return
+    @discord.ui.button(
+        label="Buy",
+        style=discord.ButtonStyle.success,
+        emoji="🛒",
+        custom_id="ticket_buy",
+        row=0
+    )
+    async def buy_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("🛒 Buy ticket created!", ephemeral=True)
 
-    @discord.ui.button(label="Media application", style=discord.ButtonStyle.primary, emoji="🎥", custom_id="create_ticket")
-    async def create_ticket_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has an open ticket
-        guild = interaction.guild
-        existing_ticket = discord.utils.get(guild.channels, name=f"ticket-{interaction.user.name.lower()}")
-        
-        if existing_ticket:
-            await interaction.response.send_message(f"❌ You already have an open ticket: {existing_ticket.mention}", ephemeral=True)
-            return
+    @discord.ui.button(
+        label="Support",
+        style=discord.ButtonStyle.primary,
+        emoji="🔗",
+        custom_id="ticket_support",
+        row=0
+    )
+    async def support_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("🆘 Support ticket created!", ephemeral=True)
+
+    @discord.ui.button(
+        label="Staff Application",
+        style=discord.ButtonStyle.danger,
+        emoji="⭐",
+        custom_id="ticket_staff",
+        row=1
+    )
+    async def staff_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("⭐ Staff application ticket created!", ephemeral=True)
         
         # Create ticket channel
         try:
