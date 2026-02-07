@@ -1,0 +1,40 @@
+========================================
+COPY-PASTE ALL CONFIG FILES
+========================================
+
+=== requirements.txt ===
+discord.py>=2.3.0
+python-dotenv>=1.0.0
+
+=== railway.json ===
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python3.10 discord_bot.py"
+  }
+}
+
+=== nixpacks.toml ===
+[phases.setup]
+nixPkgs = ["python310", "python310Packages.pip"]
+
+[phases.install]
+cmds = ["python3.10 -m pip install --upgrade pip", "python3.10 -m pip install -r requirements.txt"]
+
+[start]
+cmd = "python3.10 discord_bot.py"
+
+=== .python-version ===
+3.10
+
+========================================
+HOW TO USE:
+1. Copy each section above
+2. Create a new file with that exact name
+3. Paste the content
+4. Upload to Railway with discord_bot.py
+5. Add TOKEN variable
+========================================
