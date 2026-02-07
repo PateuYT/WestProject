@@ -69,7 +69,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color.ORANGE
+                    color=discord.Color(0xFFA500)
                 )
                 embed.add_field(
                     name="📨 Invited by",
@@ -100,7 +100,7 @@ async def on_member_join(member):
                 embed = discord.Embed(
                     title="👋 Welcome!",
                     description=f"Welcome {member.mention} to **{member.guild.name}**!",
-                    color=discord.Color.ORANGE
+                    color=discord.Color(0xFFA500)
                 )
                 embed.add_field(
                     name="👥 Member Count",
@@ -256,7 +256,7 @@ async def invite_leaderboard(ctx):
     embed = discord.Embed(
         title="🏆 Top Inviters",
         description=f"Leaderboard for **{ctx.guild.name}**",
-        color=discord.Color.gold()
+        color=discord.Color(0xFFA500)
     )
     
     medals = ["🥇", "🥈", "🥉"]
@@ -301,7 +301,7 @@ async def create_ticket(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎫 Support Tickets",
         description="Need help? Click the button below to create a support ticket!\n\nOur team will assist you as soon as possible.",
-        color=discord.Color.blue()
+        color=discord.Color(0xFFA500)
     )
     embed.add_field(
         name="📋 How it works",
@@ -329,7 +329,7 @@ async def verify(interaction: discord.Interaction, role_id: str = "1469777067762
     embed = discord.Embed(
         title="✅ Server Verification",
         description="Welcome to our server! Please verify yourself to gain access to all channels.",
-        color=discord.Color.green()
+        color=discord.Color(0xFFA500)
     )
     embed.add_field(
         name="🔐 How to verify",
@@ -383,7 +383,7 @@ class TicketView(discord.ui.View):
             ticket_embed = discord.Embed(
                 title="🎫 Ticket Created",
                 description=f"Hello {interaction.user.mention}! Thank you for creating a ticket.\n\nPlease describe your issue and our staff will assist you shortly.",
-                color=discord.Color.blue()
+                color=discord.Color(0xFFA500)
             )
             ticket_embed.set_footer(text="To close this ticket, a staff member will delete this channel.")
             
