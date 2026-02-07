@@ -214,9 +214,9 @@ class VerifyView(discord.ui.View):
 
 # Run the bot
 if __name__ == "__main__":
-    TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+    TOKEN = os.getenv("TOKEN")
     if not TOKEN:
-        print("ERROR: Please set DISCORD_BOT_TOKEN environment variable")
-        print("Example: export DISCORD_BOT_TOKEN='your_bot_token_here'")
+        print("ERROR: Please set TOKEN environment variable")
+        print("For Railway: Add TOKEN in the Variables section")
     else:
         bot.run(TOKEN)
